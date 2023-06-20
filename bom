@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+BOM=$'\xef\xbb\xbf'
+
+function usage () {
+  cat <<EOS
+Usage: $(basename "$0") [OPTION]...
+  -h         Show help
+  -a <file>  Add BOM
+  -c <file>  Check BOM
+  -d <file>  Drop BOM
+EOS
+}
+
+while getopts "a:c:d:h" opt_key; do
+  case ${opt_key} in
+    a) # Add
+      if [[ $(head -c 3 "${OPTARG}") == ${BOM} ]]; then
+        cat "${OPTARG}"
+        echo "There is already BOM." 1>&2
+      else
+        echo -ne "${BOM}"
+        cat "${OPTARG}"
+        echo "Added BOM." 1>&2
+      fi
+      ;;
+    c) # Check
+      if [[ $(head -c 3 "${OPTARG}") == ${BOM} ]]; then
+        echo "With BOM." 1>&2
+      else
+        echo "Without BOM." 1>&2
+      fi
+      ;;
+    d) # Drop
+      if [[ $(head -c 3 "${OPTARG}") == ${BOM} ]]; then
+        tail -c +4 "${OPTARG}"
+        echo "Dropped BOM." 1>&2
+      else
+        cat "${OPTARG}"
+        echo "There was no BOM." 1>&2
+      fi
+      ;;
+    '-h'|'--help'|*) # Help
+      usage
+      ;;
+  esac
+done
